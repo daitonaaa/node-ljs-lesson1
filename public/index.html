@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>files</title>
+</head>
+<body>
+  <h3>Файлы в папке</h3>
+  <ul id="files"></ul>
+
+  <script>
+    window.onload = function () {
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', '/list', true);
+      xhr.send();
+
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState !== 4) return;
+
+        if (xhr.status === 200) {
+          const filesList = JSON.parse(xhr.response);
+
+          if (Array.isArray(filesList) && filesList.length > 0) {
+            filesList.forEach((item, index) => {
+              let liNode = document.createElement('li');
+              liNode.innerText = `${index}. ${item}`;
+
+              files.appendChild(liNode);
+            });
+          }
+        }
+      }
+    }
+  </script>
+</body>
+</html>

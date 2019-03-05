@@ -23,8 +23,8 @@ module.exports = {
       .on('close', file.destroy);
   },
 
-  getAndSave: function (fileIn, res) {
-    const pathname = paths.getPathname(fileIn);
+  getAndSave: function (req, res) {
+    const pathname = paths.getPathname(req);
 
     if (this.isExists(pathname)) {
       res.statusCode = CONSTANTS.ERRORS.FILE_ALREADY_EXISTS.CODE;
@@ -34,7 +34,7 @@ module.exports = {
       const limitSizeStream = new LimitSizeStream({limit: 1000000});
       const fileOut = fs.createWriteStream(path.join(paths.files, fileName));
 
-      stream.pipeline(fileIn, limitSizeStream, fileOut, (err) => {
+      stream.pipeline(req, limitSizeStream, fileOut, (err) => {
         if (err) {
           const isLimitExceeded = err.code === CONSTANTS.ERRORS.LIMIT_EXCEEDED.CODE;
 
@@ -43,7 +43,7 @@ module.exports = {
 
           this.deleteFile(fileName);
           fileOut.destroy();
-          fileIn.destroy();
+          req.destroy();
         } else {
           res.statusCode = CONSTANTS.RESPONSE.SUCCESS.CODE;
           res.end(CONSTANTS.RESPONSE.SUCCESS.MESSAGE);

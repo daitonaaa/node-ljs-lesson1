@@ -36,13 +36,10 @@ module.exports = {
 
       stream.pipeline(fileIn, limitSizeStream, fileOut, (err) => {
         if (err) {
-          if (err.code === CONSTANTS.ERRORS.LIMIT_EXCEEDED.CODE) {
-            res.statusCode = CONSTANTS.ERRORS.LIMIT_EXCEEDED.CODE;
-            res.end(CONSTANTS.ERRORS.LIMIT_EXCEEDED.MESSAGE);
-          } else {
-            res.statusCode = CONSTANTS.ERRORS.SERVER_ERROR.CODE;
-            res.end(CONSTANTS.ERRORS.SERVER_ERROR.MESSAGE);
-          }
+          const isLimitExceeded = err.code === CONSTANTS.ERRORS.LIMIT_EXCEEDED.CODE;
+
+          res.statusCode = CONSTANTS.ERRORS[isLimitExceeded ? 'LIMIT_EXCEEDED' : 'SERVER_ERROR'].CODE;
+          res.end(CONSTANTS.ERRORS[isLimitExceeded ? 'LIMIT_EXCEEDED' : 'SERVER_ERROR'].MESSAGE);
 
           this.deleteFile(fileName);
           fileOut.destroy();

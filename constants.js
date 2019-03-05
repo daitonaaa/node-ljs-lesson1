@@ -25,6 +25,10 @@ const CONSTANTS = {
       CODE: 429,
       MESSAGE: 'LIMIT_EXCEEDED',
     },
+    SERVER_ERROR: {
+      CODE: 480,
+      MESSAGE: 'Server error',
+    }
   },
 
   RESPONSE: {

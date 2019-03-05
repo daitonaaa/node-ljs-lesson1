@@ -32,6 +32,8 @@ function routesConfig(req, res) {
 
   // POST
   else if (method === 'POST') {
+    // Как можно проверить на наличие поддерикторий в запросе /dir/dir/dir/file.ext
+    // без использования костыля !paths.hasSubdectoria(pathname) ?
     if (file.getExtension(req.url) && !paths.hasSubdectoria(pathname)) {
       file.getAndSave(req, res);
     } else {

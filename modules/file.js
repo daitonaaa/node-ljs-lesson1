@@ -1,6 +1,7 @@
 const fs = require('fs');
 const mime = require('mime');
 const path = require('path');
+const stream = require('stream');
 const paths = require('../paths');
 const CONSTANTS = require('../constants');
 const LimitSizeStream = require('./limit-size');
@@ -11,10 +12,9 @@ module.exports = {
   send: (filePath, res) => {
     const file = fs.createReadStream(filePath);
 
-    const error = (err) => {
+    const error = () => {
       res.statusCode = CONSTANTS.ERRORS.FILE_NOT_FOUND.CODE;
       res.end(CONSTANTS.ERRORS.FILE_NOT_FOUND.MESSAGE);
-      console.error(err);
     };
 
     file
@@ -23,45 +23,35 @@ module.exports = {
       .on('close', file.destroy);
   },
 
-  getAndSave: function (req, res) {
-    const pathname = paths.getPathname(req);
+  getAndSave: function (fileIn, res) {
+    const pathname = paths.getPathname(fileIn);
 
     if (this.isExists(pathname)) {
       res.statusCode = CONSTANTS.ERRORS.FILE_ALREADY_EXISTS.CODE;
       res.end(CONSTANTS.ERRORS.FILE_ALREADY_EXISTS.MESSAGE);
     } else {
-      const fileName = paths.getPathname(req).replace('/', '');
-      const limitSizeStream = new LimitSizeStream({limit: 1000});
-      // const limitSizeStream = new LimitSizeStream({limit: 1000000});
-      const fileOut = fs.createWriteStream(
-        path.join(paths.files, fileName)
-      );
+      const fileName = pathname.replace('/', '');
+      const limitSizeStream = new LimitSizeStream({limit: 1000000});
+      const fileOut = fs.createWriteStream(path.join(paths.files, fileName));
 
-      const cleanup = () => {
-        req.destroy();
-        fileOut.destroy();
-        // res end
-      }
+      stream.pipeline(fileIn, limitSizeStream, fileOut, (err) => {
+        if (err) {
+          if (err.code === CONSTANTS.ERRORS.LIMIT_EXCEEDED.CODE) {
+            res.statusCode = CONSTANTS.ERRORS.LIMIT_EXCEEDED.CODE;
+            res.end(CONSTANTS.ERRORS.LIMIT_EXCEEDED.MESSAGE);
+          } else {
+            res.statusCode = CONSTANTS.ERRORS.SERVER_ERROR.CODE;
+            res.end(CONSTANTS.ERRORS.SERVER_ERROR.MESSAGE);
+          }
 
-      req
-        .on('error', cleanup)
-        .pipe(limitSizeStream)
-        .pipe(fileOut)
-        .on('error', cleanup);
-
-      limitSizeStream.on('error', (error) => {
-        if (error.code === CONSTANTS.ERRORS.LIMIT_EXCEEDED.CODE) {
-          res.end(CONSTANTS.ERRORS.LIMIT_EXCEEDED.MESSAGE);
-          res.statusCode = CONSTANTS.ERRORS.LIMIT_EXCEEDED.CODE;
+          this.deleteFile(fileName);
+          fileOut.destroy();
+          fileIn.destroy();
         } else {
-          console.error(error);
+          res.statusCode = CONSTANTS.RESPONSE.SUCCESS.CODE;
+          res.end(CONSTANTS.RESPONSE.SUCCESS.MESSAGE);
         }
       });
-
-      fileOut.on('finish', () => {
-        res.statusCode = CONSTANTS.RESPONSE.SUCCESS.CODE;
-        res.end(CONSTANTS.RESPONSE.SUCCESS.MESSAGE);
-      })
     }
   },
 

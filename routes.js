@@ -4,7 +4,7 @@ const CONSTANTS = require('./constants');
 const file = require(paths.modules + '/file');
 
 
-function routesConfig(req, res) {
+function routes(req, res) {
   const method = req.method;
   const pathname = paths.getPathname(req);
 
@@ -59,4 +59,4 @@ function routesConfig(req, res) {
   }
 }
 
-module.exports = routesConfig;
+module.exports = routes;

@@ -34,21 +34,46 @@ module.exports = {
       const limitSizeStream = new LimitSizeStream({limit: 1000000});
       const fileOut = fs.createWriteStream(path.join(paths.files, fileName));
 
-      stream.pipeline(req, limitSizeStream, fileOut, (err) => {
-        if (err) {
-          const isLimitExceeded = err.code === CONSTANTS.ERRORS.LIMIT_EXCEEDED.CODE;
+      const cleanup = () => {
+        fileOut.destroy();
+        limitSizeStream.destroy();
+      };
 
-          res.statusCode = CONSTANTS.ERRORS[isLimitExceeded ? 'LIMIT_EXCEEDED' : 'SERVER_ERROR'].CODE;
-          res.end(CONSTANTS.ERRORS[isLimitExceeded ? 'LIMIT_EXCEEDED' : 'SERVER_ERROR'].MESSAGE);
+      req
+        .on('error', cleanup)
+        .pipe(limitSizeStream)
+        .pipe(fileOut)
+        .on('error', cleanup);
 
-          this.deleteFile(fileName);
-          fileOut.destroy();
-          req.destroy();
-        } else {
-          res.statusCode = CONSTANTS.RESPONSE.SUCCESS.CODE;
-          res.end(CONSTANTS.RESPONSE.SUCCESS.MESSAGE);
-        }
+      limitSizeStream.on('error', (err) => {
+        const isLimitExceeded = err.code === CONSTANTS.ERRORS.LIMIT_EXCEEDED.CODE;
+
+        cleanup();
+        this.deleteFile(fileName);
+        res.statusCode = CONSTANTS.ERRORS[isLimitExceeded ? 'LIMIT_EXCEEDED' : 'SERVER_ERROR'].CODE;
+        res.end(CONSTANTS.ERRORS[isLimitExceeded ? 'LIMIT_EXCEEDED' : 'SERVER_ERROR'].MESSAGE);
       });
+
+      fileOut.on('finish', () => {
+        res.statusCode = CONSTANTS.RESPONSE.SUCCESS.CODE;
+        res.end(CONSTANTS.RESPONSE.SUCCESS.MESSAGE);
+      });
+
+      // stream.pipeline(req, limitSizeStream, fileOut, (err) => {
+      //   if (err) {
+      //     const isLimitExceeded = err.code === CONSTANTS.ERRORS.LIMIT_EXCEEDED.CODE;
+      //
+      //     res.statusCode = CONSTANTS.ERRORS[isLimitExceeded ? 'LIMIT_EXCEEDED' : 'SERVER_ERROR'].CODE;
+      //     res.end(CONSTANTS.ERRORS[isLimitExceeded ? 'LIMIT_EXCEEDED' : 'SERVER_ERROR'].MESSAGE);
+      //
+      //     this.deleteFile(fileName);
+      //     fileOut.destroy();
+      //     req.destroy();
+      //   } else {
+      //     res.statusCode = CONSTANTS.RESPONSE.SUCCESS.CODE;
+      //     res.end(CONSTANTS.RESPONSE.SUCCESS.MESSAGE);
+      //   }
+      // });
     }
   },
 

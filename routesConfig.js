@@ -20,11 +20,11 @@ function routesConfig(req, res) {
         break;
 
       default: {
-        if (file.isExists(path.join(paths.files, pathname))) {
+        if (file.isExists(pathname)) {
           file.send(path.join(paths.files, pathname), res);
         } else {
           res.statusCode = CONSTANTS.ERRORS.NOT_FOUND.CODE;
-          res.end(CONSTANTS.ERRORS.NOT_FOUND.MESSAGE)
+          res.end(CONSTANTS.ERRORS.NOT_FOUND.MESSAGE);
         }
       }
     }
@@ -32,8 +32,18 @@ function routesConfig(req, res) {
 
   // POST
   else if (method === 'POST') {
-    if (file.getExtension(req.url)) {
+    if (file.getExtension(req.url) && !paths.hasSubdectoria(pathname)) {
       file.getAndSave(req, res);
+    } else {
+      res.statusCode = CONSTANTS.ERRORS.NOT_FOUND.CODE;
+      res.end(CONSTANTS.ERRORS.NOT_FOUND.MESSAGE)
+    }
+  }
+
+  // DELETE
+  else if (method === 'DELETE') {
+    if (file.getExtension(req.url)) {
+      file.deleteFile(pathname, res);
     } else {
       res.statusCode = CONSTANTS.ERRORS.NOT_FOUND.CODE;
       res.end(CONSTANTS.ERRORS.NOT_FOUND.MESSAGE)

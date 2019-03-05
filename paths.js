@@ -7,4 +7,5 @@ module.exports = {
   modules: path.join(__dirname, 'modules'),
 
   getPathname: (req) => decodeURI(url.parse(req.url).pathname),
+  hasSubdectoria: (path) => path.split('/').length > 2,
 };

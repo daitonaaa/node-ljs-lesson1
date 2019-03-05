@@ -20,8 +20,19 @@ const CONSTANTS = {
     FILE_ALREADY_EXISTS:  {
       CODE: 409,
       MESSAGE: 'File already exists',
-    }
-  }
+    },
+    LIMIT_EXCEEDED: {
+      CODE: 429,
+      MESSAGE: 'LIMIT_EXCEEDED',
+    },
+  },
+
+  RESPONSE: {
+    SUCCESS: {
+      CODE: 200,
+      MESSAGE: 'OK',
+    },
+  },
 
 };
 

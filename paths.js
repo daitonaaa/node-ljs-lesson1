@@ -4,6 +4,7 @@ const path = require('path');
 module.exports = {
   files: path.join(__dirname, 'files'),
   public: path.join(__dirname, 'public'),
+  assets: path.join(__dirname, 'assets'),
   modules: path.join(__dirname, 'modules'),
 
   getPathname: (req) => decodeURI(url.parse(req.url).pathname),

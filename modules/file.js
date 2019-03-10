@@ -4,18 +4,20 @@ const path = require('path');
 const stream = require('stream');
 const paths = require('../paths');
 const CONSTANTS = require('../constants');
-const LimitSizeStream = require('./limit-size');
+const LimitSizeStream = require('./LimitSizeStream');
 
 
 module.exports = {
 
-  send: (filePath, res) => {
+  send: function (filePath, res) {
     const file = fs.createReadStream(filePath);
 
     const error = () => {
       res.statusCode = CONSTANTS.ERRORS.FILE_NOT_FOUND.CODE;
       res.end(CONSTANTS.ERRORS.FILE_NOT_FOUND.MESSAGE);
     };
+
+    res.setHeader('Content-Type', this.getExtension(filePath));
 
     file
       .on('error', error)
